@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>My Personal Calendar</title>
+
+    <!-- FullCalendar CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- App CSS -->
+    <link rel="stylesheet" href="css/style.css" />
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- FullCalendar -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+    <!-- App JS -->
+    <script src="js/calendar.js" defer></script>
+  </head>
+
+  <body>
+    <!-- PASSWORD OVERLAY -->
+    <div id="authOverlay">
+      <div class="auth-box">
+        <h2>🔒 Private Calendar</h2>
+        <input
+          type="password"
+          id="passwordInput"
+          placeholder="Enter password"
+        />
+        <button onclick="checkPassword()">Enter</button>
+        <p id="authError"></p>
+      </div>
+    </div>
+
+    <h1>My Personal Calendar</h1>
+
+    <div id="calendar"></div>
+
+    <!-- EVENT MODAL -->
+    <div id="eventModal" class="modal">
+      <div class="modal-content">
+        <h3>Add / Edit Event</h3>
+
+        <label>Event Title</label>
+        <input type="text" id="eventTitle" />
+
+        <label>From</label>
+        <select id="eventFrom"></select>
+
+        <label>To</label>
+        <select id="eventTo"></select>
+
+        <div class="modal-actions">
+          <button onclick="closeModal()">Cancel</button>
+          <button id="deleteBtn" onclick="deleteEvent()">Delete</button>
+          <button onclick="saveEvent()">Save</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

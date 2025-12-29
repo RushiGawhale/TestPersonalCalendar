@@ -1,0 +1,92 @@
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+  background: #f6f7fb;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+/* CALENDAR */
+#calendar {
+  max-width: 900px;
+  margin: 20px auto;
+  background: white;
+  padding: 15px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* PASSWORD OVERLAY */
+#authOverlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+.auth-box {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  width: 300px;
+  text-align: center;
+}
+
+.auth-box input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.auth-box button {
+  margin-top: 15px;
+  padding: 8px 16px;
+}
+
+/* MODAL */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  width: 320px;
+  border-radius: 12px;
+}
+
+.modal-content label {
+  display: block;
+  margin-top: 10px;
+}
+
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+}
+
+.modal-actions {
+  margin-top: 15px;
+  text-align: right;
+}
+
+#deleteBtn {
+  background: #dc2626;
+  color: white;
+  display: none;
+}

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>🌈 My Availability</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+    <style>
+      body {
+        font-family: system-ui;
+        background: #fdfbfb;
+        text-align: center;
+        padding: 20px;
+      }
+
+      #calendar {
+        max-width: 900px;
+        margin: auto;
+        border-radius: 16px;
+        padding: 15px;
+        background: white;
+      }
+
+      .fc-month-1 #calendar {
+        background: #fdf6ec;
+      }
+      .fc-month-2 #calendar {
+        background: #f0f7ff;
+      }
+      .fc-month-3 #calendar {
+        background: #f3fbf6;
+      }
+      .fc-month-4 #calendar {
+        background: #fff5f7;
+      }
+      .fc-month-5 #calendar {
+        background: #f6f4ff;
+      }
+      .fc-month-6 #calendar {
+        background: #f2fbff;
+      }
+      .fc-month-7 #calendar {
+        background: #fff9f0;
+      }
+      .fc-month-8 #calendar {
+        background: #f4fff6;
+      }
+      .fc-month-9 #calendar {
+        background: #f7f7f7;
+      }
+      .fc-month-10 #calendar {
+        background: #fff4f4;
+      }
+      .fc-month-11 #calendar {
+        background: #f3f6ff;
+      }
+      .fc-month-12 #calendar {
+        background: #fdf7ff;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>✨ My Availability</h1>
+    <div id="calendar"></div>
+
+    <script>
+      const SUPABASE_URL = "https://ubrpgbnspdlgpcdlwluc.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVicnBnYm5zcGRsZ3BjZGx3bHVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwMjEyNTEsImV4cCI6MjA4MjU5NzI1MX0.iTV99bkvPjwpbm1qM9TgHfqoL0Zs6u2u0OLqmCnwDw4";
+
+      const supabaseClient = supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+      function applyMonth(calendar) {
+        document.body.className =
+          "fc-month-" + (calendar.getDate().getMonth() + 1);
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        const { data } = await supabaseClient.from("events").select("*");
+
+        const calendar = new FullCalendar.Calendar(
+          document.getElementById("calendar"),
+          {
+            initialView: "dayGridMonth",
+            headerToolbar: {
+              left: "prev,next",
+              center: "title",
+              right: "",
+            },
+            events: data,
+            datesSet() {
+              applyMonth(calendar);
+            },
+          }
+        );
+
+        calendar.render();
+        applyMonth(calendar);
+      });
+    </script>
+  </body>
+</html>
