@@ -67,7 +67,7 @@ window.saveEvent = async function () {
     editingEvent.setStart(`${selectedDate}T${from}`);
     editingEvent.setEnd(`${selectedDate}T${to}`);
 
-    await supabaseClient.from("events").upsert({
+    await supabaseClient.from("PersonalCalendarEvents").upsert({
       id: editingEvent.id,
       title,
       start: `${selectedDate}T${from}`,
@@ -76,7 +76,7 @@ window.saveEvent = async function () {
     });
   } else {
     const { data } = await supabaseClient
-      .from("events")
+      .from("PersonalCalendarEvents")
       .insert({
         title,
         start: `${selectedDate}T${from}`,
@@ -95,7 +95,7 @@ window.saveEvent = async function () {
 window.deleteEvent = async function () {
   if (!editingEvent) return;
 
-  await supabaseClient.from("events").delete().eq("id", editingEvent.id);
+  await supabaseClient.from("PersonalCalendarEvents").delete().eq("id", editingEvent.id);
 
   editingEvent.remove();
   closeModal();
@@ -105,7 +105,7 @@ window.deleteEvent = async function () {
 document.addEventListener("DOMContentLoaded", async function () {
   populateTimes();
 
-  const { data } = await supabaseClient.from("events").select("*");
+  const { data } = await supabaseClient.from("PersonalCalendarEvents").select("*");
 
   calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
     initialView: "dayGridMonth",
