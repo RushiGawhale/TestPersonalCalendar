@@ -15,77 +15,156 @@
   <script src="calendar.js" defer></script>
 
   <style>
-    body {
-      font-family: system-ui;
-      background: #f5f7fb;
-      margin: 0;
-      padding: 10px;
-      text-align: center;
-    }
+  * {
+    box-sizing: border-box;
+  }
 
-    #calendar {
-      max-width: 900px;
-      margin: auto;
-      background: white;
-      padding: 15px;
-      border-radius: 16px;
-    }
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #f5f7fb, #eef2ff);
+    margin: 0;
+    padding: 10px;
+    text-align: center;
+  }
 
-    #authOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
+  h1 {
+    margin-bottom: 10px;
+  }
 
-    #authBox {
-      background: white;
-      padding: 20px;
-      border-radius: 14px;
-      width: 90%;
-      max-width: 320px;
-    }
+  #calendar {
+    max-width: 950px;
+    margin: auto;
+    background: white;
+    padding: 15px;
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+  }
 
-    #eventModal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-    }
+  /* ---------- PASSWORD ---------- */
+  #authOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
 
-    #modalContent {
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 400px;
-      text-align: left;
-    }
+  #authBox {
+    background: white;
+    padding: 24px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 320px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  }
 
-    .form-group {
-      margin-bottom: 12px;
-      display: flex;
+  #authBox input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+  }
+
+  /* ---------- EVENT MODAL ---------- */
+  #eventModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+
+  #modalContent {
+    background: white;
+    padding: 22px;
+    border-radius: 18px;
+    width: 92%;
+    max-width: 420px;
+    text-align: left;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  #modalContent h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-group label {
+    font-size: 14px;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    width: 100%;
+  }
+
+  .time-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .time-row .form-group {
+    flex: 1;
+  }
+
+  /* ---------- BUTTONS ---------- */
+  button {
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    margin-right: 6px;
+  }
+
+  button:hover {
+    opacity: 0.9;
+  }
+
+  button:nth-child(1) {
+    background: #2563eb;
+    color: white;
+  }
+
+  button:nth-child(2) {
+    background: #dc2626;
+    color: white;
+  }
+
+  button:nth-child(3) {
+    background: #e5e7eb;
+  }
+
+  /* ---------- MOBILE ---------- */
+  @media (max-width: 480px) {
+    .time-row {
       flex-direction: column;
     }
-
-    .time-row {
-      display: flex;
-      gap: 10px;
-    }
-
-    button {
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-    }
-  </style>
+  }
+</style>
 </head>
 
 <body>
