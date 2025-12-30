@@ -85,7 +85,7 @@
       }
 
       document.addEventListener("DOMContentLoaded", async () => {
-        const { data } = await supabaseClient.from("events").select("*");
+        const { data } = await supabaseClient.from("PersonalCalendarEvents").select("*");
 
         const calendar = new FullCalendar.Calendar(
           document.getElementById("calendar"),
