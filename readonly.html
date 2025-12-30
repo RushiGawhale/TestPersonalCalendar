@@ -1,111 +1,199 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>🌈 My Availability</title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🌈 My Availability</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link
-      href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <!-- FullCalendar -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
+    rel="stylesheet"
+  />
 
-    <style>
-      body {
-        font-family: system-ui;
-        background: #fdfbfb;
-        text-align: center;
-        padding: 20px;
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- FullCalendar -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+  <style>
+    /* ===== GLOBAL ===== */
+    body {
+      font-family: "Poppins", system-ui, sans-serif;
+      background: linear-gradient(135deg, #fdfbfb, #ebedee);
+      margin: 0;
+      padding: 10px;
+      text-align: center;
+      transition: background 0.4s ease;
+    }
+
+    h1 {
+      margin: 10px 0 5px;
+      font-size: 24px;
+    }
+
+    p {
+      margin: 0 0 15px;
+      color: #555;
+    }
+
+    /* ===== CALENDAR CONTAINER ===== */
+    #calendar {
+      max-width: 100%;
+      margin: auto;
+      background: white;
+      border-radius: 18px;
+      padding: 12px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+    }
+
+    /* ===== EVENTS ===== */
+    .fc-event {
+      border-radius: 10px;
+      padding: 5px 6px;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+    }
+
+    /* ===== LIST VIEW (MOBILE) ===== */
+    .fc-list-event {
+      border-radius: 12px;
+      margin: 6px 0;
+    }
+
+    .fc-list-event-title {
+      font-weight: 600;
+    }
+
+    .fc-list-day-cushion {
+      background: #f1f5f9;
+      border-radius: 10px;
+      margin: 10px 0;
+      padding: 6px 10px;
+      font-weight: 600;
+    }
+
+    /* ===== MOBILE ===== */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 22px;
+      }
+
+      .fc-toolbar-title {
+        font-size: 16px;
       }
 
       #calendar {
+        padding: 8px;
+        border-radius: 14px;
+      }
+    }
+
+    /* ===== TABLET ===== */
+    @media (min-width: 601px) and (max-width: 1024px) {
+      #calendar {
+        max-width: 95%;
+      }
+
+      .fc-toolbar-title {
+        font-size: 20px;
+      }
+    }
+
+    /* ===== DESKTOP ===== */
+    @media (min-width: 1025px) {
+      #calendar {
         max-width: 900px;
-        margin: auto;
-        border-radius: 16px;
-        padding: 15px;
-        background: white;
       }
 
-      .fc-month-1 #calendar {
-        background: #fdf6ec;
+      .fc-toolbar-title {
+        font-size: 26px;
       }
-      .fc-month-2 #calendar {
-        background: #f0f7ff;
-      }
-      .fc-month-3 #calendar {
-        background: #f3fbf6;
-      }
-      .fc-month-4 #calendar {
-        background: #fff5f7;
-      }
-      .fc-month-5 #calendar {
-        background: #f6f4ff;
-      }
-      .fc-month-6 #calendar {
-        background: #f2fbff;
-      }
-      .fc-month-7 #calendar {
-        background: #fff9f0;
-      }
-      .fc-month-8 #calendar {
-        background: #f4fff6;
-      }
-      .fc-month-9 #calendar {
-        background: #f7f7f7;
-      }
-      .fc-month-10 #calendar {
-        background: #fff4f4;
-      }
-      .fc-month-11 #calendar {
-        background: #f3f6ff;
-      }
-      .fc-month-12 #calendar {
-        background: #fdf7ff;
-      }
-    </style>
-  </head>
+    }
 
-  <body>
-    <h1>✨ My Availability</h1>
-    <div id="calendar"></div>
+    /* ===== MONTH COLORS ===== */
+    body.fc-month-1  { background: #fdf6ec; }
+    body.fc-month-2  { background: #f0f7ff; }
+    body.fc-month-3  { background: #f3fbf6; }
+    body.fc-month-4  { background: #fff5f7; }
+    body.fc-month-5  { background: #f6f4ff; }
+    body.fc-month-6  { background: #f2fbff; }
+    body.fc-month-7  { background: #fff9f0; }
+    body.fc-month-8  { background: #f4fff6; }
+    body.fc-month-9  { background: #f7f7f7; }
+    body.fc-month-10 { background: #fff4f4; }
+    body.fc-month-11 { background: #f3f6ff; }
+    body.fc-month-12 { background: #fdf7ff; }
+  </style>
+</head>
 
-    <script>
-      const SUPABASE_URL = "https://ubrpgbnspdlgpcdlwluc.supabase.co";
-      const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVicnBnYm5zcGRsZ3BjZGx3bHVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwMjEyNTEsImV4cCI6MjA4MjU5NzI1MX0.iTV99bkvPjwpbm1qM9TgHfqoL0Zs6u2u0OLqmCnwDw4";
+<body>
+  <h1>✨ My Availability</h1>
+  <p>Here’s how my days look 😊</p>
 
-      const supabaseClient = supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-      );
+  <div id="calendar"></div>
 
-      function applyMonth(calendar) {
-        document.body.className =
-          "fc-month-" + (calendar.getDate().getMonth() + 1);
+  <script>
+    /***********************
+     * CONFIG
+     ***********************/
+    const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR_PUBLIC_ANON_KEY";
+    const EVENTS_TABLE = "PersonalCalendarEvents";
+
+    const supabaseClient = supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+    function applyMonthColor(calendar) {
+      const month = calendar.getDate().getMonth() + 1;
+      document.body.className = `fc-month-${month}`;
+    }
+
+    document.addEventListener("DOMContentLoaded", async function () {
+      const { data, error } = await supabaseClient
+        .from(EVENTS_TABLE)
+        .select("*");
+
+      if (error) {
+        console.error("Supabase error:", error);
+        return;
       }
 
-      document.addEventListener("DOMContentLoaded", async () => {
-        const { data } = await supabaseClient.from("PersonalCalendarEvents").select("*");
+      const calendarEl = document.getElementById("calendar");
 
-        const calendar = new FullCalendar.Calendar(
-          document.getElementById("calendar"),
-          {
-            initialView: "dayGridMonth",
-            headerToolbar: {
-              left: "prev,next",
-              center: "title",
-              right: "",
-            },
-            events: data,
-            datesSet() {
-              applyMonth(calendar);
-            },
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: window.innerWidth < 768 ? "listWeek" : "dayGridMonth",
+
+        headerToolbar: {
+          left: "prev,next",
+          center: "title",
+          right: ""
+        },
+
+        events: data,
+        editable: false,
+        selectable: false,
+
+        windowResize: function () {
+          if (window.innerWidth < 768) {
+            calendar.changeView("listWeek");
+          } else {
+            calendar.changeView("dayGridMonth");
           }
-        );
+        },
 
-        calendar.render();
-        applyMonth(calendar);
+        datesSet: function () {
+          applyMonthColor(calendar);
+        }
       });
-    </script>
-  </body>
+
+      calendar.render();
+      applyMonthColor(calendar);
+    });
+  </script>
+</body>
 </html>
