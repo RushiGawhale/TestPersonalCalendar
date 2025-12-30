@@ -1,42 +1,61 @@
-/***********************
+/************************
  * SUPABASE CONFIG
- ***********************/
-/************** SUPABASE **************/
+ ************************/
 const SUPABASE_URL = "https://ubrpgbnspdlgpcdlwluc.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVicnBnYm5zcGRsZ3BjZGx3bHVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwMjEyNTEsImV4cCI6MjA4MjU5NzI1MX0.iTV99bkvPjwpbm1qM9TgHfqoL0Zs6u2u0OLqmCnwDw4";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVicnBnYm5zcGRsZ3BjZGx3bHVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwMjEyNTEsImV4cCI6MjA4MjU5NzI1MX0.iTV99bkvPjwpbm1qM9TgHfqoL0Zs6u2u0OLqmCnwDw4";
+const EVENTS_TABLE = "PersonalCalendarEvents";
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
 
-/************** PASSWORD **************/
+/************************
+ * PASSWORD (EDIT PAGE)
+ ************************/
 const PASSWORD = "mySecret123";
 
 window.checkPassword = function () {
-  const val = document.getElementById("passwordInput").value;
-  if (val === PASSWORD) {
+  const input = document.getElementById("passwordInput").value;
+  const error = document.getElementById("authError");
+
+  if (input === PASSWORD) {
     document.getElementById("authOverlay").style.display = "none";
   } else {
-    document.getElementById("authError").innerText = "Wrong password ❌";
+    error.innerText = "Wrong password ❌";
   }
 };
 
-/************** GLOBALS **************/
+/************************
+ * GLOBAL STATE
+ ************************/
 let calendar;
-let editingEvent = null;
 let selectedDate = null;
+let editingEvent = null;
 
-const colors = ["#1e3a8a", "#065f46", "#7c2d12", "#581c87"];
+const eventColors = [
+  "#1e3a8a",
+  "#7c2d12",
+  "#065f46",
+  "#581c87",
+  "#9f1239"
+];
 
-/************** TIME DROPDOWNS **************/
-function populateTimes() {
+/************************
+ * TIME DROPDOWNS
+ ************************/
+function populateTimeDropdowns() {
   const from = document.getElementById("eventFrom");
   const to = document.getElementById("eventTo");
 
+  from.innerHTML = "";
+  to.innerHTML = "";
+
   for (let h = 0; h < 24; h++) {
     for (let m of ["00", "30"]) {
-      const t = `${String(h).padStart(2, "0")}:${m}`;
-      from.add(new Option(t, t));
-      to.add(new Option(t, t));
+      const time = `${String(h).padStart(2, "0")}:${m}`;
+      from.add(new Option(time, time));
+      to.add(new Option(time, time));
     }
   }
 
@@ -44,7 +63,25 @@ function populateTimes() {
   to.value = "11:00";
 }
 
-/************** MODAL **************/
+/************************
+ * LOAD EVENTS
+ ************************/
+async function loadEvents() {
+  const { data, error } = await supabaseClient
+    .from(EVENTS_TABLE)
+    .select("*");
+
+  if (error) {
+    console.error("Load events error:", error);
+    return [];
+  }
+
+  return data;
+}
+
+/************************
+ * MODAL CONTROLS
+ ************************/
 window.closeModal = function () {
   editingEvent = null;
   document.getElementById("deleteBtn").style.display = "none";
@@ -52,41 +89,73 @@ window.closeModal = function () {
 };
 
 window.saveEvent = async function () {
-  const title = eventTitle.value;
-  const from = eventFrom.value;
-  const to = eventTo.value;
+  const title = document.getElementById("eventTitle").value.trim();
+  const from = document.getElementById("eventFrom").value;
+  const to = document.getElementById("eventTo").value;
 
-  if (!title) return;
+  if (!title || !from || !to) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  // ✅ FIX #1 + #2 — stable ISO datetime (local time, with seconds)
+  const startDateTime = `${selectedDate}T${from}:00`;
+  const endDateTime = `${selectedDate}T${to}:00`;
+
+  // ✅ FIX #3 — prevent FullCalendar auto-correct
+  if (endDateTime <= startDateTime) {
+    alert("End time must be after start time");
+    return;
+  }
 
   const color =
     editingEvent?.backgroundColor ||
-    colors[Math.floor(Math.random() * colors.length)];
+    eventColors[Math.floor(Math.random() * eventColors.length)];
 
   if (editingEvent) {
+    // UPDATE
     editingEvent.setProp("title", title);
-    editingEvent.setStart(`${selectedDate}T${from}`);
-    editingEvent.setEnd(`${selectedDate}T${to}`);
+    editingEvent.setStart(startDateTime);
+    editingEvent.setEnd(endDateTime);
 
-    await supabaseClient.from("PersonalCalendarEvents").upsert({
-      id: editingEvent.id,
-      title,
-      start: `${selectedDate}T${from}`,
-      end: `${selectedDate}T${to}`,
-      color,
-    });
+    const { error } = await supabaseClient
+      .from(EVENTS_TABLE)
+      .update({
+        title,
+        start: startDateTime,
+        end: endDateTime,
+        color
+      })
+      .eq("id", editingEvent.id);
+
+    if (error) {
+      console.error("Update error:", error);
+    }
   } else {
-    const { data } = await supabaseClient
-      .from("PersonalCalendarEvents")
+    // INSERT
+    const { data, error } = await supabaseClient
+      .from(EVENTS_TABLE)
       .insert({
         title,
-        start: `${selectedDate}T${from}`,
-        end: `${selectedDate}T${to}`,
-        color,
+        start: startDateTime,
+        end: endDateTime,
+        color
       })
       .select()
       .single();
 
-    calendar.addEvent(data);
+    if (error) {
+      console.error("Insert error:", error);
+      return;
+    }
+
+    calendar.addEvent({
+      id: data.id,
+      title: data.title,
+      start: data.start,
+      end: data.end,
+      color: data.color
+    });
   }
 
   closeModal();
@@ -95,49 +164,73 @@ window.saveEvent = async function () {
 window.deleteEvent = async function () {
   if (!editingEvent) return;
 
-  await supabaseClient.from("PersonalCalendarEvents").delete().eq("id", editingEvent.id);
+  if (!confirm("Delete this event?")) return;
+
+  const { error } = await supabaseClient
+    .from(EVENTS_TABLE)
+    .delete()
+    .eq("id", editingEvent.id);
+
+  if (error) {
+    console.error("Delete error:", error);
+    return;
+  }
 
   editingEvent.remove();
+  editingEvent = null;
   closeModal();
 };
 
-/************** INIT **************/
+/************************
+ * CALENDAR INIT
+ ************************/
 document.addEventListener("DOMContentLoaded", async function () {
-  populateTimes();
+  populateTimeDropdowns();
 
-  const { data } = await supabaseClient.from("PersonalCalendarEvents").select("*");
+  const calendarEl = document.getElementById("calendar");
+  const events = await loadEvents();
 
-  calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+  calendar = new FullCalendar.Calendar(calendarEl, {
+    timeZone: "local", // ✅ FIX #1
     initialView: "dayGridMonth",
+
     headerToolbar: {
       left: "prev,next today",
       center: "title",
-      right: "",
+      right: ""
     },
-    events: data,
+
+    events: events,
 
     dateClick(info) {
       selectedDate = info.dateStr;
       editingEvent = null;
 
-      eventTitle.value = "";
-      deleteBtn.style.display = "none";
-      eventModal.style.display = "flex";
+      document.getElementById("eventTitle").value = "";
+      document.getElementById("eventFrom").value = "10:00";
+      document.getElementById("eventTo").value = "11:00";
+      document.getElementById("deleteBtn").style.display = "none";
+
+      document.getElementById("eventModal").style.display = "flex";
     },
 
     eventClick(info) {
       editingEvent = info.event;
-      const s = info.event.start;
-      const e = info.event.end;
 
-      selectedDate = s.toISOString().split("T")[0];
-      eventTitle.value = info.event.title;
-      eventFrom.value = s.toTimeString().slice(0, 5);
-      eventTo.value = e.toTimeString().slice(0, 5);
+      const start = info.event.start;
+      const end = info.event.end;
 
-      deleteBtn.style.display = "inline-block";
-      eventModal.style.display = "flex";
-    },
+      selectedDate = start.toISOString().split("T")[0];
+
+      document.getElementById("eventTitle").value = info.event.title;
+      document.getElementById("eventFrom").value =
+        start.toTimeString().slice(0, 5);
+      document.getElementById("eventTo").value =
+        end.toTimeString().slice(0, 5);
+
+      document.getElementById("deleteBtn").style.display = "inline-block";
+      document.getElementById("eventModal").style.display = "flex";
+    }
   });
 
   calendar.render();
