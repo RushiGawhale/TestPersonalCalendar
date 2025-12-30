@@ -1,67 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>My Personal Calendar</title>
+<head>
+  <meta charset="UTF-8" />
+  <title>📅 My Personal Calendar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- FullCalendar CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
-      rel="stylesheet"
-    />
+  <!-- FullCalendar -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
+    rel="stylesheet"
+  />
 
-    <!-- App CSS -->
-    <link rel="stylesheet" href="style.css" />
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- FullCalendar -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 
-    <!-- FullCalendar -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <!-- Calendar Logic -->
+  <script src="calendar.js" defer></script>
 
-    <!-- App JS -->
-    <script src="calendar.js" defer></script>
-  </head>
+  <style>
+    /* ===== GLOBAL ===== */
+    body {
+      font-family: "Poppins", system-ui, sans-serif;
+      margin: 0;
+      padding: 10px;
+      background: #f5f7fb;
+      text-align: center;
+    }
 
-  <body>
-    <!-- PASSWORD OVERLAY -->
-    <div id="authOverlay">
-      <div class="auth-box">
-        <h2>🔒 Private Calendar</h2>
-        <input
-          type="password"
-          id="passwordInput"
-          placeholder="Enter password"
-        />
-        <button onclick="checkPassword()">Enter</button>
-        <p id="authError"></p>
-      </div>
+    h1 {
+      margin: 10px 0 15px;
+    }
+
+    /* ===== CALENDAR ===== */
+    #calendar {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 15px;
+      border-radius: 16px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+    }
+
+    /* ===== AUTH OVERLAY ===== */
+    #authOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    #authBox {
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 320px;
+    }
+
+    #authBox input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    /* ===== MODAL OVERLAY ===== */
+    #eventModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    /* ===== MODAL BOX ===== */
+    #modalContent {
+      background: white;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 18px;
+      padding: 20px;
+      text-align: left;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+
+    #modalContent h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    /* ===== FORM ===== */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: #444;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    /* ===== TIME ROW ===== */
+    .time-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .time-row .form-group {
+      flex: 1;
+    }
+
+    /* ===== BUTTONS ===== */
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .save-btn {
+      background: #2563eb;
+      color: white;
+    }
+
+    .delete-btn {
+      background: #dc2626;
+      color: white;
+    }
+
+    .cancel-btn {
+      background: #e5e7eb;
+    }
+
+    /* ===== MOBILE ===== */
+    @media (max-width: 500px) {
+      #modalContent {
+        padding: 16px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>📅 My Personal Calendar</h1>
+
+  <div id="calendar"></div>
+
+  <!-- PASSWORD OVERLAY -->
+  <div id="authOverlay">
+    <div id="authBox">
+      <h3>🔐 Enter Password</h3>
+      <input type="password" id="passwordInput" placeholder="Password" />
+      <button onclick="checkPassword()">Unlock</button>
+      <p id="authError" style="color:red;"></p>
     </div>
+  </div>
 
-    <h1>My Personal Calendar</h1>
+  <!-- EVENT MODAL -->
+  <div id="eventModal">
+    <div id="modalContent">
+      <h2>📝 Event Details</h2>
 
-    <div id="calendar"></div>
+      <div class="form-group">
+        <label>Event Name</label>
+        <input type="text" id="eventTitle" placeholder="Meeting, Gym, Study..." />
+      </div>
 
-    <!-- EVENT MODAL -->
-    <div id="eventModal" class="modal">
-      <div class="modal-content">
-        <h3>Add / Edit Event</h3>
+      <div class="time-row">
+        <div class="form-group">
+          <label>From</label>
+          <select id="eventFrom"></select>
+        </div>
 
-        <label>Event Title</label>
-        <input type="text" id="eventTitle" />
-
-        <label>From</label>
-        <select id="eventFrom"></select>
-
-        <label>To</label>
-        <select id="eventTo"></select>
-
-        <div class="modal-actions">
-          <button onclick="closeModal()">Cancel</button>
-          <button id="deleteBtn" onclick="deleteEvent()">Delete</button>
-          <button onclick="saveEvent()">Save</button>
+        <div class="form-group">
+          <label>To</label>
+          <select id="eventTo"></select>
         </div>
       </div>
+
+      <div class="modal-actions">
+        <button class="save-btn" onclick="saveEvent()">Save</button>
+        <button class="delete-btn" id="deleteBtn" onclick="deleteEvent()" style="display:none;">Delete</button>
+        <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+      </div>
     </div>
-  </body>
+  </div>
+
+</body>
 </html>
