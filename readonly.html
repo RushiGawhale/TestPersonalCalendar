@@ -166,6 +166,7 @@
       const calendarEl = document.getElementById("calendar");
 
       const calendar = new FullCalendar.Calendar(calendarEl, {
+        timeZone: "local",
         initialView: window.innerWidth < 768 ? "listWeek" : "dayGridMonth",
 
         headerToolbar: {
