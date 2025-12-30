@@ -11,10 +11,30 @@ const supabaseClient = supabase.createClient(
 );
 
 /************************
- * PASSWORD (EDIT PAGE)
+ * PASSWORD
  ************************/
 const PASSWORD = "mySecret123";
 
+/************************
+ * GLOBAL STATE
+ ************************/
+let calendar;
+let selectedDate = null;
+let editingEvent = null;
+
+const eventColors = [
+  "#1e3a8a",
+  "#065f46",
+  "#7c2d12",
+  "#581c87",
+  "#9f1239"
+];
+
+const allDayColor = "#6b7280";
+
+/************************
+ * PASSWORD ENTER SUPPORT
+ ************************/
 window.checkPassword = function () {
   const input = document.getElementById("passwordInput").value;
   const error = document.getElementById("authError");
@@ -26,20 +46,11 @@ window.checkPassword = function () {
   }
 };
 
-/************************
- * GLOBAL STATE
- ************************/
-let calendar;
-let selectedDate = null;
-let editingEvent = null;
-
-const eventColors = [
-  "#1e3a8a",
-  "#7c2d12",
-  "#065f46",
-  "#581c87",
-  "#9f1239"
-];
+window.handlePasswordEnter = function (e) {
+  if (e.key === "Enter") {
+    checkPassword();
+  }
+};
 
 /************************
  * TIME DROPDOWNS
@@ -59,8 +70,8 @@ function populateTimeDropdowns() {
     }
   }
 
-  from.value = "10:00";
-  to.value = "11:00";
+  from.value = "09:00";
+  to.value = "18:00";
 }
 
 /************************
@@ -72,89 +83,104 @@ async function loadEvents() {
     .select("*");
 
   if (error) {
-    console.error("Load events error:", error);
+    console.error(error);
     return [];
   }
 
-  return data;
+  return data.map(e => ({
+    id: e.id,
+    title: e.title,
+    start: e.start,
+    end: e.end,
+    allDay: e.all_day,
+    color: e.all_day ? allDayColor : e.color
+  }));
 }
+
+/************************
+ * ALL DAY TOGGLE
+ ************************/
+window.toggleAllDay = function () {
+  const isAllDay = document.getElementById("allDayCheckbox").checked;
+  document.getElementById("eventFrom").disabled = isAllDay;
+  document.getElementById("eventTo").disabled = isAllDay;
+};
 
 /************************
  * MODAL CONTROLS
  ************************/
 window.closeModal = function () {
   editingEvent = null;
-  document.getElementById("deleteBtn").style.display = "none";
   document.getElementById("eventModal").style.display = "none";
 };
 
 window.saveEvent = async function () {
   const title = document.getElementById("eventTitle").value.trim();
+  const isAllDay = document.getElementById("allDayCheckbox").checked;
   const from = document.getElementById("eventFrom").value;
   const to = document.getElementById("eventTo").value;
 
-  if (!title || !from || !to) {
-    alert("Please fill all fields");
+  if (!title) {
+    alert("Event title required");
     return;
   }
 
-  // ✅ FIX #1 + #2 — stable ISO datetime (local time, with seconds)
-  const startDateTime = `${selectedDate}T${from}:00`;
-  const endDateTime = `${selectedDate}T${to}:00`;
+  let start, end;
 
-  // ✅ FIX #3 — prevent FullCalendar auto-correct
-  if (endDateTime <= startDateTime) {
-    alert("End time must be after start time");
-    return;
+  if (isAllDay) {
+    start = selectedDate;
+    end = null;
+  } else {
+    start = `${selectedDate}T${from}:00`;
+    end = `${selectedDate}T${to}:00`;
+
+    if (end <= start) {
+      alert("End time must be after start time");
+      return;
+    }
   }
 
-  const color =
-    editingEvent?.backgroundColor ||
-    eventColors[Math.floor(Math.random() * eventColors.length)];
+  const color = isAllDay
+    ? allDayColor
+    : eventColors[Math.floor(Math.random() * eventColors.length)];
 
   if (editingEvent) {
-    // UPDATE
     editingEvent.setProp("title", title);
-    editingEvent.setStart(startDateTime);
-    editingEvent.setEnd(endDateTime);
+    editingEvent.setAllDay(isAllDay);
+    editingEvent.setStart(start);
+    editingEvent.setEnd(end);
+    editingEvent.setProp("backgroundColor", color);
 
-    const { error } = await supabaseClient
+    await supabaseClient
       .from(EVENTS_TABLE)
       .update({
         title,
-        start: startDateTime,
-        end: endDateTime,
+        start,
+        end,
+        all_day: isAllDay,
         color
       })
       .eq("id", editingEvent.id);
-
-    if (error) {
-      console.error("Update error:", error);
-    }
   } else {
-    // INSERT
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
       .from(EVENTS_TABLE)
       .insert({
         title,
-        start: startDateTime,
-        end: endDateTime,
+        start,
+        end,
+        all_day: isAllDay,
         color
       })
       .select()
       .single();
 
-    if (error) {
-      console.error("Insert error:", error);
-      return;
-    }
-
     calendar.addEvent({
       id: data.id,
-      title: data.title,
-      start: data.start,
-      end: data.end,
-      color: data.color
+      title,
+      start,
+      end,
+      allDay: isAllDay,
+      color
     });
   }
 
@@ -163,21 +189,14 @@ window.saveEvent = async function () {
 
 window.deleteEvent = async function () {
   if (!editingEvent) return;
-
   if (!confirm("Delete this event?")) return;
 
-  const { error } = await supabaseClient
+  await supabaseClient
     .from(EVENTS_TABLE)
     .delete()
     .eq("id", editingEvent.id);
 
-  if (error) {
-    console.error("Delete error:", error);
-    return;
-  }
-
   editingEvent.remove();
-  editingEvent = null;
   closeModal();
 };
 
@@ -191,44 +210,36 @@ document.addEventListener("DOMContentLoaded", async function () {
   const events = await loadEvents();
 
   calendar = new FullCalendar.Calendar(calendarEl, {
-    timeZone: "local", // ✅ FIX #1
+    timeZone: "local",
     initialView: "dayGridMonth",
-
-    headerToolbar: {
-      left: "prev,next today",
-      center: "title",
-      right: ""
-    },
-
-    events: events,
+    events,
 
     dateClick(info) {
       selectedDate = info.dateStr;
       editingEvent = null;
 
       document.getElementById("eventTitle").value = "";
-      document.getElementById("eventFrom").value = "10:00";
-      document.getElementById("eventTo").value = "11:00";
-      document.getElementById("deleteBtn").style.display = "none";
+      document.getElementById("allDayCheckbox").checked = false;
+      toggleAllDay();
 
       document.getElementById("eventModal").style.display = "flex";
     },
 
     eventClick(info) {
       editingEvent = info.event;
-
-      const start = info.event.start;
-      const end = info.event.end;
-
-      selectedDate = start.toISOString().split("T")[0];
+      selectedDate = info.event.startStr.split("T")[0];
 
       document.getElementById("eventTitle").value = info.event.title;
-      document.getElementById("eventFrom").value =
-        start.toTimeString().slice(0, 5);
-      document.getElementById("eventTo").value =
-        end.toTimeString().slice(0, 5);
+      document.getElementById("allDayCheckbox").checked = info.event.allDay;
+      toggleAllDay();
 
-      document.getElementById("deleteBtn").style.display = "inline-block";
+      if (!info.event.allDay) {
+        document.getElementById("eventFrom").value =
+          info.event.start.toTimeString().slice(0, 5);
+        document.getElementById("eventTo").value =
+          info.event.end.toTimeString().slice(0, 5);
+      }
+
       document.getElementById("eventModal").style.display = "flex";
     }
   });
